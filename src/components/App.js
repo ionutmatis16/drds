@@ -32,7 +32,6 @@ class App extends Component {
 
     onSubmit = async (event) => {
         event.preventDefault();
-        console.log("submitting");
         for await (const file of ipfs.add(this.state.buffer)) {
             this.setState({ipfsHash: file.path})
         }
@@ -52,7 +51,7 @@ class App extends Component {
                         <main role="main" className="col-lg-12 d-flex text-center">
                             <div className="content mr-auto ml-auto">
                                 <h1>Data Reliability using Decentralized Systems</h1>
-                                <img src={(ipfsPath + this.state.ipfsHash)} alt="Ipfs image hash"/>
+                                <img src={(ipfsPath + this.state.ipfsHash)} alt="Ipfs hash"/>
                                 <br/>
                                 <br/>
                                 <br/>
