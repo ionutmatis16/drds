@@ -8,12 +8,22 @@ contract DRDS {
         string username;
     }
 
+    // sa tin istoricul update-urilor
+    // event pentru register / add file hash
+    // event pentru un update la un fisier deja incarcat
+
+    // ca owner ar trebuit sa poti face la update la un fisier incarcat (cu nou hash?)
+
     mapping(string => InformationAuthor) fileHashes;
+   /* mapping(InformationAuthor *//*ori adresa*//*=> mapping(string *//*label fisier, depsre ce info vb*//*
+=> string *//*ultima versiune incarcata, hash-ul ei*//*));
+    mapping(InformationAuthor => string[]);*/
+    // istoric il scot din event-uri
+	
+	// sa trimit pe frontent si hash-ul transactiei, ca un fel de bon (receipt)
 
     function addFileHash(string memory _fileHash, string memory _username) public {
-        if (fileHashes[_fileHash].addr != address(0)) {
-            revert("File already in the system!");
-        }
+        require(fileHashes[_fileHash].addr == address(0), "File already in the system!");
 
         fileHashes[_fileHash] = InformationAuthor({addr : msg.sender, username : _username});
     }

@@ -41,8 +41,6 @@ class App extends Component {
             const smartContractAddress = networkData.address;
             const contract = new web3.eth.Contract(abi, smartContractAddress);
             this.setState({contract});
-            let author = await contract.methods.getAuthor("a").call();
-            console.log(author);
         } else {
             // TODO detect the change from metamask?
             alert("Smart contract not deployed to detected network");
@@ -80,6 +78,8 @@ class App extends Component {
         reader.onloadend = () => {
             this.setState({
                 buffer: Buffer(reader.result)
+                // ar trebui sa salvez numele fisierului undeva,
+                // ca apoi ala sa poata fi afisat impreuna cu hash-ul (ca un link) pe frontend
             })
         }
     };
@@ -98,7 +98,7 @@ class App extends Component {
             if (error.message.includes("User denied transaction signature")) {
                 console.log("User denied");
             } else {
-                this.setState({ipfsHash: fileHash})
+                this.setState({ipfsHash: fileHash});
                 alert("The file was already uploaded!");
             }
         });
