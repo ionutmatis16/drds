@@ -8,6 +8,8 @@ contract DRDS {
         string username;
     }
 
+    mapping(address => string) userNames;
+
     // sa tin istoricul update-urilor
     // event pentru register / add file hash
     // event pentru un update la un fisier deja incarcat
@@ -30,5 +32,13 @@ contract DRDS {
 
     function getAuthor(string memory _fileHash) public view returns (InformationAuthor memory author) {
         return fileHashes[_fileHash];
+    }
+
+    function addUsername(string memory _username) public {
+        userNames[msg.sender] = _username;
+    }
+
+    function getUsername() public view returns (string memory) {
+        return userNames[msg.sender];
     }
 }

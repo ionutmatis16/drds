@@ -1,8 +1,8 @@
-img {
+#ipfs-image {
     width: 300px;
     height: 300px;
 }
 
-#metamask-icon {
-    width: 1000px;
+#username-label {
+    font-size: 20px;
 }
