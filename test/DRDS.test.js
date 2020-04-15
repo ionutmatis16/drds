@@ -24,8 +24,9 @@ contract('DRDS', (accounts) => {
     //TODO should I add another test to check the file hash?
     describe('storage', async () => {
         it('updates the fileHash correctly', async () => {
-            const fileHash = "a";
-            await drds.addFileHash(fileHash, "Test username");
+            const fileHash = "fileHash";
+            const fileName = "fileName";
+            await drds.addFileHash(fileName, fileHash, "Test username");
             const author = await drds.getAuthor(fileHash);
             validAddress(author.addr);
         });
@@ -33,11 +34,12 @@ contract('DRDS', (accounts) => {
 
     describe('duplicate file', async () => {
         it("should throw an error", async () => {
-            const fileHash = "b";
-            await drds.addFileHash(fileHash, "Test username");
+            const fileHash = "fileHash2";
+            const fileName = "fileName";
+            await drds.addFileHash(fileName, fileHash, "Test username");
             try {
                 // try to add the same hash again
-                await drds.addFileHash(fileHash, "Test username");
+                await drds.addFileHash(fileName, fileHash, "Test username");
             } catch (err) {
                 console.log(err.reason);
                 return;

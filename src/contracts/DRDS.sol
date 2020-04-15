@@ -8,6 +8,11 @@ contract DRDS {
         string username;
     }
 
+    struct FileInfo {
+        string fileName;
+        string fileHash;
+    }
+
     mapping(address => string) userNames;
 
     // sa tin istoricul update-urilor
@@ -17,17 +22,22 @@ contract DRDS {
     // ca owner ar trebuit sa poti face la update la un fisier incarcat (cu nou hash?)
 
     mapping(string => InformationAuthor) fileHashes;
-   /* mapping(InformationAuthor *//*ori adresa*//*=> mapping(string *//*label fisier, depsre ce info vb*//*
-=> string *//*ultima versiune incarcata, hash-ul ei*//*));
-    mapping(InformationAuthor => string[]);*/
+    // first string: file-label / about what info I refer to
+    // second string: new file hash
+    mapping(address => mapping(string => string)) allFiles;
+
+    mapping(address => FileInfo[]) uploadedFiles;
     // istoric il scot din event-uri
 	
-	// sa trimit pe frontent si hash-ul transactiei, ca un fel de bon (receipt)
+	// sa trimit pe frontend si hash-ul transactiei, ca un fel de bon (receipt)
+    // o sa fie din event probabil
 
-    function addFileHash(string memory _fileHash, string memory _username) public {
+    function addFileHash(string memory _fileName, string memory _fileHash, string memory _username) public {
         require(fileHashes[_fileHash].addr == address(0), "File already in the system!");
 
         fileHashes[_fileHash] = InformationAuthor({addr : msg.sender, username : _username});
+        uploadedFiles[msg.sender].push(FileInfo(_fileName,_fileHash));
+        // TODO: add a custom event
     }
 
     function getAuthor(string memory _fileHash) public view returns (InformationAuthor memory author) {
@@ -40,5 +50,9 @@ contract DRDS {
 
     function getUsername() public view returns (string memory) {
         return userNames[msg.sender];
+    }
+
+    function getUploadedFiles() public view returns (FileInfo[] memory) {
+        return uploadedFiles[msg.sender];
     }
 }

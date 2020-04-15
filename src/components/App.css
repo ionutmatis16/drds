@@ -1,8 +1,79 @@
+html {
+    overflow-y: scroll;
+}
+
+::-webkit-file-upload-button {
+    color: #fff;
+    background-color: #343a40;
+    border-color: #343a40;
+    border-radius: 0.25rem;
+    outline: none;
+}
+
+::-webkit-file-upload-button:hover {
+    cursor: pointer;
+}
+
 #ipfs-image {
     width: 300px;
     height: 300px;
 }
 
-#username-label {
-    font-size: 20px;
+
+#main-panel-div {
+    margin-top:70px;
+    text-align: center;
+}
+
+#uploaded-files-div {
+    margin-top: 30px;
+    text-align: left;
+}
+
+.upload-form-div {
+    text-align: center;
+}
+
+.form-inline {
+    margin-left: 25% !important;
+    margin-right: 25% !important;
+}
+
+.username-input {
+    width: 500px !important;
+    margin-right: 50px;
+}
+
+.files-div {
+    margin-left: 25%;
+    margin-right: 25%;
+}
+
+.uploaded-file-div {
+    border: 1px black solid;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.uploaded-file-div:hover {
+    background-color: #f7f7f7;
+}
+
+.file-hash-p {
+    margin-bottom: 0;
+}
+
+.navbar-brand {
+    cursor: pointer !important;
+}
+
+.file-name-div {
+    display: flex;
+    justify-content: space-between;
+}
+
+.see-details-button {
+    height: 30px !important;
+    padding: 0 10px !important;
 }
