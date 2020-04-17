@@ -20,7 +20,7 @@ html {
 }
 
 
-#main-panel-div {
+.main-panel-div {
     margin-top:70px;
     text-align: center;
 }
@@ -35,8 +35,8 @@ html {
 }
 
 .form-inline {
-    margin-left: 25% !important;
-    margin-right: 25% !important;
+    margin-left: 20% !important;
+    margin-right: 20% !important;
 }
 
 .username-input {
@@ -76,4 +76,9 @@ html {
 .see-details-button {
     height: 30px !important;
     padding: 0 10px !important;
+}
+
+.info-page-main-div {
+    margin-left: 5%;
+    margin-top: 100px;
 }
