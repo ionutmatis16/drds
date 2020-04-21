@@ -6,7 +6,10 @@ const FilePanel = ({fileInfo, txHash}) => (
         <div className="file-name-div">
             <p><strong>Name: </strong>{fileInfo.fileName}</p>
             <button className="btn btn-success see-details-button"
-                    onClick={() => window.location.assign(("#/uploaded-files/" + fileInfo.fileHash))}>
+                    onClick={() => {
+                        let fileType = fileInfo.fileName.substring(fileInfo.fileName.lastIndexOf(".") + 1);
+                        window.location.assign(("#/uploaded-files/" + fileInfo.fileHash + "?fileType=" + fileType));
+                    }}>
                 See details
             </button>
         </div>
@@ -18,7 +21,8 @@ const FilePanel = ({fileInfo, txHash}) => (
                 {fileInfo.fileHash}
             </a>
         </p>
-        <p className="file-hash-p"><strong>Ethereum Transaction hash: </strong>
+        <p className="file-hash-p">
+            <strong>Ethereum Transaction hash: </strong>
             {txHash}
         </p>
     </div>

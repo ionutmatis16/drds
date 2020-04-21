@@ -8,46 +8,134 @@ export default class SmartFileInformationPage extends Component {
         this.state = {
             fileHash: '',
             totalSize: 0,
-            links: []
+            links: [],
+            fileType: '',
+            partialDataToDisplay: ""
         }
     }
 
-
     async componentDidMount() {
+        await this.resolveUrl();
+    }
+
+    async componentDidUpdate(prevProps) {
+        if (this.props.location !== prevProps.location) {
+            await this.resolveUrl();
+        }
+    }
+
+    async resolveUrl() {
+        const fileType = this.getQueryParamValue(this.props, "fileType");
+        this.setState({fileType});
+
         const lastSlash = this.props.location.pathname.lastIndexOf('/');
         const fileHash = this.props.location.pathname.substring(lastSlash + 1);
         this.setState({fileHash});
+
         let nodeData = await ipfs.object.get(fileHash);
-        this.setState({totalSize: nodeData.size});
-        let links = nodeData._links;
-        this.setState({links});
-        console.log(nodeData);
+        let links = [];
+        nodeData._links.forEach(link => links.push({size: link.Tsize, hash: link.Hash.string}))
+        this.setState({
+            totalSize: nodeData.size,
+            links: links
+        });
+
+        this.setState({
+            partialDataToDisplay: await this.getPartialData(fileHash, 2000)
+        });
+
+        let textArea = document.getElementById("ipfs-textarea");
+        if (textArea) {
+            textArea.scroll(0, 0);
+        }
     }
 
+    getQueryParamValue(props, queryParam) {
+        let url = props.location.search;
+        let questionMark = url.indexOf("?");
+        let params = props.location.search.substring(questionMark + 1).split("&");
+
+        for (let i = 0; i < params.length; i++) {
+            let paramSplit = params[i].split("=");
+            if (paramSplit[0] === queryParam) {
+                return paramSplit[1];
+            }
+        }
+
+        return '';
+    }
+
+    async getPartialData(ipfsHash, maxChars) {
+        const chunks = [];
+        for await (const chunk of ipfs.cat(ipfsHash)) {
+            chunks.push(chunk)
+        }
+
+        let result = Buffer.concat(chunks).toString();
+        if (maxChars < result.length) {
+            result = result.substring(0, maxChars) + "...";
+        }
+
+        return result;
+    };
+
     render() {
+        let dataToDisplay = "";
+
+        switch (this.state.fileType) {
+            case "jpg":
+            case "jpeg":
+            case "png":
+                dataToDisplay = <img className="ipfs-image"
+                                     src={(ipfsPath + this.state.fileHash)}
+                                     alt="IPFS object"/>;
+                break;
+            default :
+                dataToDisplay = <div>
+                    <h6>Showing the first 2000 characters of your uploaded file</h6>
+                    <textarea id="ipfs-textarea"
+                              value={this.state.partialDataToDisplay}
+                              disabled/>
+                </div>
+        }
+
         return (
             <div className="info-page-main-div">
-                <h3>Info about {this.state.fileHash}</h3>
-                <p>Total size: {this.state.totalSize}</p>
+                <h3>
+                    Info about <a href={ipfsPath + this.state.fileHash}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title="Click to open the link in IPFS">
+                    {this.state.fileHash}
+                </a>
+                </h3>
+
+                {
+                    dataToDisplay
+                }
+
+                <p style={{marginBottom: 0}}><strong>Total size: </strong>{this.state.totalSize} bytes</p>
+                <p><strong>Nr of links: </strong>{this.state.links.length}</p>
                 <ol>
                     {
                         this.state.links.map((link, index) =>
-                            <li key={index}>
-                                <p>Link size: {link.Tsize}</p>
-                                <p>
-                                    Link hash:
-                                    <a href={(ipfsPath + link.Hash.string)}
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       title="Click to open the link in IPFS">
-                                        {" " + link.Hash.string}
-                                    </a>
-                                </p>
-                            </li>
+                            <div key={index}>
+                                <li>
+                                    <p><strong>Link size: </strong>{link.size} bytes</p>
+                                    <p>
+                                        <strong>Link hash: </strong>
+                                        <a href={("#/uploaded-files/" + link.hash)}
+                                           title="Click to open the link in DRDS">
+                                            {" " + link.hash}
+                                        </a>
+                                    </p>
+                                </li>
+                                <hr/>
+                            </div>
                         )
                     }
                 </ol>
             </div>
         )
     }
-}
+};

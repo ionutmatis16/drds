@@ -22,8 +22,11 @@ contract DRDS {
     // ca owner ar trebuit sa poti face la update la un fisier incarcat (cu nou hash?)
 
     mapping(string => InformationAuthor) fileHashes;
-    // first string: file-label / about what info I refer to
-    // second string: new file hash
+    // first string: file-label / about what info I refer to. First file hash?
+    // second string: new, edited file hash
+    // SAU
+    // first string: file name (ex: poza1.jpg)
+    // second string: file hash
     mapping(address => mapping(string => string)) allFiles;
 
     mapping(address => FileInfo[]) uploadedFiles;

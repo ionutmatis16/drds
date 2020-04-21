@@ -14,12 +14,6 @@ html {
     cursor: pointer;
 }
 
-#ipfs-image {
-    width: 300px;
-    height: 300px;
-}
-
-
 .main-panel-div {
     margin-top:70px;
     text-align: center;
@@ -35,7 +29,7 @@ html {
 }
 
 .form-inline {
-    margin-left: 20% !important;
+    margin-left: 25% !important;
     margin-right: 20% !important;
 }
 
@@ -81,4 +75,16 @@ html {
 .info-page-main-div {
     margin-left: 5%;
     margin-top: 100px;
+    margin-right: 5%;
+}
+
+.ipfs-image {
+    width: 700px;
+    margin-bottom: 40px;
+}
+
+#ipfs-textarea {
+    width: 50%;
+    height: 200px;
+    resize: none;
 }

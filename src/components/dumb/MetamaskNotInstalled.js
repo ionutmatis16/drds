@@ -12,7 +12,7 @@ const MetamaskNotInstalled = () => (
                 Metamask
             </a>.
         </h2>
-        <h2>After that, log into your account and refresh the page.</h2>
+        <h2>After that, create an account and log in with it.</h2>
         <img id="metamask-icon" src={"logo_metamask.jpg"} alt="Metamask logo"/>
     </div>
 );

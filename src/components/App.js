@@ -37,6 +37,9 @@ class App extends Component {
             window.ethereum.on('chainChanged', async () => {
                 await this.loadBlockchainData();
             });
+            window.ethereum.on('networkChanged', async () => {
+                await this.loadBlockchainData();
+            });
         }
     }
 

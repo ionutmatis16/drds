@@ -4,6 +4,7 @@ require('chai')
     .use(require('chai-as-promised'))
     .should();
 
+// TODO: improve tests?
 contract('DRDS', (accounts) => {
     // accounts => provided by the blockchain
     let drds;
@@ -21,7 +22,6 @@ contract('DRDS', (accounts) => {
         })
     });
 
-    //TODO should I add another test to check the file hash?
     describe('storage', async () => {
         it('updates the fileHash correctly', async () => {
             const fileHash = "fileHash";
