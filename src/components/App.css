@@ -39,8 +39,8 @@ html {
 }
 
 .files-div {
-    margin-left: 25%;
-    margin-right: 25%;
+    margin-left: 20%;
+    margin-right: 20%;
 }
 
 .uploaded-file-div {
@@ -87,4 +87,30 @@ html {
     width: 50%;
     height: 200px;
     resize: none;
+}
+
+.home-nav-link {
+    margin-left: 30px;
+}
+
+.modal {
+    padding-right: 0 !important;
+}
+
+.modal-open {
+    padding-right: 0 !important;
+}
+
+.modal-dialog {
+    width: 900px !important;
+    max-width: 900px !important;
+}
+
+.tx-hash-button {
+    color: #007bff;
+}
+
+.tx-hash-button:hover {
+    cursor: pointer;
+    text-decoration: underline;
 }

@@ -13,10 +13,7 @@ class SmartHomepage extends Component {
             ipfsHash: null,
             fileName: null,
             uploadedFiles: [],
-            txInfos: [{
-                fileIndex: 0,
-                txHash: ""
-            }]
+            fileHashAddedEvents: []
         };
     }
 
@@ -55,10 +52,6 @@ class SmartHomepage extends Component {
                 .send({from: this.props.ethState.accountAddress})
                 .then((receipt) => {
                     this.loadFileInfoFromContract();
-                    let nrOfFiles = this.state.uploadedFiles.length;
-                    let txInfos = this.state.txInfos.concat({fileIndex: nrOfFiles - 1, txHash: receipt.transactionHash});
-                    console.log(txInfos);
-                    this.setState({txInfos: txInfos});
                 })
                 .catch((error) => {
                     console.log(error);
@@ -75,34 +68,72 @@ class SmartHomepage extends Component {
         }
     };
 
-    loadFileInfoFromContract = async () => {
+    loadFileInfoFromContract = () => {
         this.props.ethState.contract.methods
             .getUploadedFiles()
             .call({from: this.props.ethState.accountAddress})
             .then(uploadedFiles => this.setState({uploadedFiles}))
             .catch(error => console.log(error));
+        this.props.ethState.contract.events
+            .FileHashAdded(
+                {userAddress: this.props.ethState.accountAddress},
+                {fromBlock: 0, toBlock: 'latest'},
+                (error, eventResult) => {
+                    if (error) {
+                        console.log('Error in myEvent event handler: ' + error);
+                    } else {
+                        this.addTransactionInfoToFile(eventResult);
+                    }
+                });
+    };
+
+    addTransactionInfoToFile = (eventResult) => {
+        let fileHashAddedEvent = {
+            contractAddress: eventResult.address,
+            blockHash: eventResult.blockHash,
+            blockNumber: eventResult.blockNumber,
+            fileHash: eventResult.returnValues.fileHash,
+            authorAddress: eventResult.returnValues.userAddress,
+            transactionHash: eventResult.transactionHash,
+            transactionIndex: eventResult.transactionIndex,
+            showModal: false
+        };
+
+        let events = this.state.fileHashAddedEvents.concat([fileHashAddedEvent]);
+        this.setState({fileHashAddedEvents: events});
+    };
+
+    toggleModalState = (transactionHash, value) => {
+        let newFileHashAddedEvents = this.state.fileHashAddedEvents.map((fileEvent, index) => {
+            if (fileEvent.transactionHash !== transactionHash) {
+                return fileEvent;
+            }
+
+            return {
+                ...fileEvent,
+                showModal: value
+            }
+        });
+        this.setState({fileHashAddedEvents: newFileHashAddedEvents});
     };
 
     render() {
         return (
             <div>
-                {
-                    <div>
-                        <div className="main-panel-div">
-                            <h1>Data Reliability using Decentralized Systems</h1>
-                            <br/>
-                        </div>
-                        <div>
-                            <div className="files-div">
-                                <UploadFileForm captureFile={this.captureFile}
-                                                onSubmit={this.onSubmit}
-                                                fileBuffer={this.state.fileBuffer}/>
-                                <UploadedFilesPanel uploadedFiles={this.state.uploadedFiles}
-                                                    txInfos={this.state.txInfos}/>
-                            </div>
-                        </div>
+                <div className="main-panel-div">
+                    <h1>Data Reliability using Decentralized Systems</h1>
+                    <br/>
+                </div>
+                <div>
+                    <div className="files-div">
+                        <UploadFileForm captureFile={this.captureFile}
+                                        onSubmit={this.onSubmit}
+                                        fileBuffer={this.state.fileBuffer}/>
+                        <UploadedFilesPanel uploadedFiles={this.state.uploadedFiles}
+                                            fileHashAddedEvents={this.state.fileHashAddedEvents}
+                                            toggleModalState={this.toggleModalState}/>
                     </div>
-                }
+                </div>
             </div>
         );
     }

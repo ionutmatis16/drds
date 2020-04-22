@@ -7,7 +7,7 @@ const MyNavbar = ({accountAddress, username}) => (
                 onClick={() => window.location.assign("#/")}
                 className="navbar-brand col-sm-3 col-md-2 mr-0">
                 DRDS
-                <span style={{marginLeft: 30}}>Home</span>
+                <span className="home-nav-link">Home</span>
             </span>
             <ul className="navbar-nav px-3">
                 <li className="nav-item text-nowrap d-none d-sm-none d-sm-block">

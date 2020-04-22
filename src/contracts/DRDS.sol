@@ -14,6 +14,7 @@ contract DRDS {
     }
 
     mapping(address => string) userNames;
+    event FileHashAdded(address indexed userAddress, string fileHash);
 
     // sa tin istoricul update-urilor
     // event pentru register / add file hash
@@ -40,7 +41,7 @@ contract DRDS {
 
         fileHashes[_fileHash] = InformationAuthor({addr : msg.sender, username : _username});
         uploadedFiles[msg.sender].push(FileInfo(_fileName,_fileHash));
-        // TODO: add a custom event
+        emit FileHashAdded(msg.sender, _fileHash);
     }
 
     function getAuthor(string memory _fileHash) public view returns (InformationAuthor memory author) {

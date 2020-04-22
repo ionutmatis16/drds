@@ -1,6 +1,4 @@
 const initialState = {
-    // TODO: keep this on localStorage?
-    uploadedFilesTxInfo: []
 };
 
 function changeIFPSState(state, property, value) {

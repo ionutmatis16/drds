@@ -34,7 +34,7 @@ export default class SmartFileInformationPage extends Component {
 
         let nodeData = await ipfs.object.get(fileHash);
         let links = [];
-        nodeData._links.forEach(link => links.push({size: link.Tsize, hash: link.Hash.string}))
+        nodeData._links.forEach(link => links.push({size: link.Tsize, hash: link.Hash.string}));
         this.setState({
             totalSize: nodeData.size,
             links: links
@@ -114,7 +114,7 @@ export default class SmartFileInformationPage extends Component {
                     dataToDisplay
                 }
 
-                <p style={{marginBottom: 0}}><strong>Total size: </strong>{this.state.totalSize} bytes</p>
+                <p className="file-hash-p"><strong>Total size: </strong>{this.state.totalSize} bytes</p>
                 <p><strong>Nr of links: </strong>{this.state.links.length}</p>
                 <ol>
                     {
