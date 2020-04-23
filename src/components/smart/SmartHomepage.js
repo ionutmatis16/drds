@@ -51,7 +51,7 @@ class SmartHomepage extends Component {
                 .addFileHash(this.state.fileName, fileHash, this.props.ethState.username)
                 .send({from: this.props.ethState.accountAddress})
                 .then((receipt) => {
-                    this.loadFileInfoFromContract();
+                    window.location.reload();
                 })
                 .catch((error) => {
                     console.log(error);
@@ -75,16 +75,16 @@ class SmartHomepage extends Component {
             .then(uploadedFiles => this.setState({uploadedFiles}))
             .catch(error => console.log(error));
         this.props.ethState.contract.events
-            .FileHashAdded(
-                {userAddress: this.props.ethState.accountAddress},
-                {fromBlock: 0, toBlock: 'latest'},
-                (error, eventResult) => {
-                    if (error) {
-                        console.log('Error in myEvent event handler: ' + error);
-                    } else {
-                        this.addTransactionInfoToFile(eventResult);
-                    }
-                });
+            .FileHashAdded({
+                filter: {userAddress: this.props.ethState.accountAddress},
+                fromBlock: 0
+            }, (error, eventResult) => {
+                if (error) {
+                    console.log('Error in myEvent event handler: ' + error);
+                } else {
+                    this.addTransactionInfoToFile(eventResult);
+                }
+            });
     };
 
     addTransactionInfoToFile = (eventResult) => {
