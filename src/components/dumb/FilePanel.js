@@ -1,12 +1,14 @@
 import React from "react";
 import {ipfsPath} from "../util/IPFSUtil";
 import Modal from "react-bootstrap/Modal";
+import ValidFileIcon from "./ValidFileIcon";
+import InvalidFileIcon from "./InvalidFileIcon";
 
 const FilePanel = ({fileInfo, fileHashAddedEvent, toggleModalState}) => (
     <div className="uploaded-file-div">
         <div className="file-name-div">
             <p><strong>Name: </strong>{fileInfo.fileName}</p>
-            <button className="btn btn-success see-details-button"
+            <button className="btn btn-primary see-details-button"
                     onClick={() => {
                         let fileType = fileInfo.fileName.substring(fileInfo.fileName.lastIndexOf(".") + 1);
                         window.location.assign(("#/uploaded-files/" + fileInfo.fileHash + "?fileType=" + fileType));
@@ -14,14 +16,25 @@ const FilePanel = ({fileInfo, fileHashAddedEvent, toggleModalState}) => (
                 See details
             </button>
         </div>
-        <p><strong>IPFS File hash: </strong>
-            <a href={ipfsPath + fileInfo.fileHash}
-               target="_blank"
-               rel="noopener noreferrer"
-               title="Click to open the link in IPFS">
-                {fileInfo.fileHash}
-            </a>
-        </p>
+        <div className="p-ipfs-check">
+            <p><strong>IPFS File hash: </strong>
+                <a href={ipfsPath + fileInfo.fileHash}
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   title="Click to open the link in IPFS">
+                    {fileInfo.fileHash}
+                </a>
+            </p>
+            {
+                fileInfo.isValid ?
+                    <ValidFileIcon id={fileInfo.fileHash}/>
+                    :
+                    fileInfo.isValid === false ?
+                        <InvalidFileIcon id={fileInfo.fileHash}/>
+                        :
+                        ""
+            }
+        </div>
         <p className="file-hash-p">
             <strong>Ethereum Transaction hash: </strong>
             {

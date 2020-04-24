@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
 import {ipfs, ipfsPath} from "../util/IPFSUtil";
+import ValidFileIcon from "../dumb/ValidFileIcon";
+import InvalidFileIcon from "../dumb/InvalidFileIcon";
 
 export default class SmartFileInformationPage extends Component {
 
@@ -10,6 +12,7 @@ export default class SmartFileInformationPage extends Component {
             totalSize: 0,
             links: [],
             fileType: '',
+            isValid: undefined,
             partialDataToDisplay: ""
         }
     }
@@ -32,21 +35,32 @@ export default class SmartFileInformationPage extends Component {
         const fileHash = this.props.location.pathname.substring(lastSlash + 1);
         this.setState({fileHash});
 
-        let nodeData = await ipfs.object.get(fileHash);
-        let links = [];
-        nodeData._links.forEach(link => links.push({size: link.Tsize, hash: link.Hash.string}));
-        this.setState({
-            totalSize: nodeData.size,
-            links: links
-        });
+        try {
+            let nodeData = await ipfs.object.get(fileHash);
+            let links = [];
+            nodeData._links.forEach(link => links.push({size: link.Tsize, hash: link.Hash.string}));
+            this.setState({
+                totalSize: nodeData.size,
+                links: links,
+                isValid: true
+            });
 
-        this.setState({
-            partialDataToDisplay: await this.getPartialData(fileHash, 2000)
-        });
+            this.setState({
+                partialDataToDisplay: await this.getPartialData(fileHash, 2000)
+            });
 
-        let textArea = document.getElementById("ipfs-textarea");
-        if (textArea) {
-            textArea.scroll(0, 0);
+            let textArea = document.getElementById("ipfs-textarea");
+            if (textArea) {
+                textArea.scroll(0, 0);
+            }
+        } catch (e) {
+            if (e.message === "Failed to fetch") {
+                alert("You are not connected to an IPFS node!");
+            } else if (e.message.includes("block in storage has different hash than requested")) {
+                this.setState({isValid: false});
+            } else {
+                console.log(e);
+            }
         }
     }
 
@@ -108,12 +122,19 @@ export default class SmartFileInformationPage extends Component {
                                   title="Click to open the link in IPFS">
                     {this.state.fileHash}
                 </a>
+                    {
+                        this.state.isValid ?
+                            <ValidFileIcon id={this.state.fileHash}/>
+                            :
+                            this.state.isValid === false ?
+                                <InvalidFileIcon id={this.state.fileHash}/>
+                                :
+                                ""
+                    }
                 </h3>
-
                 {
                     dataToDisplay
                 }
-
                 <p className="file-hash-p"><strong>Total size: </strong>{this.state.totalSize} bytes</p>
                 <p><strong>Nr of links: </strong>{this.state.links.length}</p>
                 <ol>

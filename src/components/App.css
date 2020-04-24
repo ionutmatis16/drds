@@ -114,3 +114,25 @@ html {
     cursor: pointer;
     text-decoration: underline;
 }
+
+.ipfs-marking {
+    margin-left: 15px;
+    font-size: 30px;
+}
+
+.ipfs-check {
+    color: #08f500 !important;
+}
+
+.ipfs-cross {
+    color: red !important;
+}
+
+.p-ipfs-check {
+    display: flex;
+    justify-content: space-between;
+}
+
+.opacity-1 {
+    opacity: 1 !important;
+}

@@ -72,7 +72,10 @@ class SmartHomepage extends Component {
         this.props.ethState.contract.methods
             .getUploadedFiles()
             .call({from: this.props.ethState.accountAddress})
-            .then(uploadedFiles => this.setState({uploadedFiles}))
+            .then(uploadedFiles => {
+                this.setState({uploadedFiles});
+                this.validateIpfsFiles();
+            })
             .catch(error => console.log(error));
         this.props.ethState.contract.events
             .FileHashAdded({
@@ -85,6 +88,29 @@ class SmartHomepage extends Component {
                     this.addTransactionInfoToFile(eventResult);
                 }
             });
+    };
+
+    validateIpfsFiles = async () => {
+        let uploadedFiles = this.state.uploadedFiles;
+        let result = [];
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            let isValid = undefined;
+            try {
+                await ipfs.files.stat("/ipfs/" + uploadedFiles[i].fileHash);
+                isValid = true;
+            } catch (error) {
+                if (error.message.includes("block in storage has different hash than requested")) {
+                    isValid = false;
+                }
+            }
+
+            let updatedFile = {
+                ...uploadedFiles[i],
+                isValid: isValid
+            };
+            result.push(updatedFile);
+        }
+        this.setState({uploadedFiles: result});
     };
 
     addTransactionInfoToFile = (eventResult) => {
