@@ -8,9 +8,22 @@ function ipfsReducer(state = initialState, action) {
             return {
                 uploadedFiles: action.value
             };
-        case "VALIDATED_LINKS":
+        case "VALIDATED_LINK":
+            let result =  state.uploadedFiles
+                .map(updatedFile => {
+                    if (updatedFile.fileHash !== action.value.fileHash) {
+                        return updatedFile;
+                    }
+                    return {
+                        ...updatedFile,
+                        totalSize: action.value.totalSize,
+                        isValid: action.value.isValid,
+                        links: action.value.links,
+                        partialDataToDisplay: action.value.partialDataToDisplay
+                    }
+                });
             return {
-                uploadedFiles: action.value
+                uploadedFiles: result
             };
         default:
             return state;

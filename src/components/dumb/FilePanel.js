@@ -33,7 +33,7 @@ const FilePanel = ({fileInfo, fileHashAddedEvent, toggleModalState}) => (
                     fileInfo.isValid === false ?
                         <InvalidFileIcon id={fileInfo.fileHash}/>
                         :
-                        ""
+                        <span className="validity-loader"/>
             }
         </div>
         <p className="file-hash-p">

@@ -1,8 +1,9 @@
 import React, {Component} from 'react';
-import {getPartialData, ipfsPath} from "../util/IPFSUtil";
+import {ipfsPath} from "../util/IPFSUtil";
 import ValidFileIcon from "../dumb/ValidFileIcon";
 import InvalidFileIcon from "../dumb/InvalidFileIcon";
 import {connect} from "react-redux";
+import store from "../../redux/store/store";
 
 class SmartFileInformationPage extends Component {
 
@@ -14,20 +15,21 @@ class SmartFileInformationPage extends Component {
                 totalSize: 0,
                 links: [],
                 isValid: undefined,
-                partialDataToDisplay: "da" // will be received from ipfs get
+                partialDataToDisplay: ""
             },
+            fileHash: '',
             fileType: '',
+            unsubscribe: undefined
         }
     }
 
     async componentDidMount() {
         await this.resolveUrl();
+        window.scrollTo(0, 0);
     }
 
-    async componentDidUpdate(prevProps) {
-        if (this.props.location !== prevProps.location) {
-            await this.resolveUrl();
-        }
+    componentWillUnmount() {
+        this.state.unsubscribe();
     }
 
     async resolveUrl() {
@@ -36,33 +38,22 @@ class SmartFileInformationPage extends Component {
 
         const lastSlash = this.props.location.pathname.lastIndexOf('/');
         const fileHash = this.props.location.pathname.substring(lastSlash + 1);
+        this.setState({fileHash},
+            () => {
+                let unsubscribe = store.subscribe(() => this.getIpfsData(this.state.fileHash));
+                this.setState({unsubscribe});
+                this.getIpfsData(this.state.fileHash);
+            });
+    }
 
+    getIpfsData = async (fileHash) => {
         let foundFileHash = this.props.ipfsState.uploadedFiles
             .filter(uploadedFile => uploadedFile.fileHash === fileHash);
 
         if (foundFileHash.length > 0) {
-            let fileInstance = foundFileHash[0];
-            let partialData;
-            if (foundFileHash[0].isValid) {
-                partialData = await getPartialData(fileInstance.fileHash, 2000);
-            } else {
-                partialData = "INVALID FILE"
-            }
-            fileInstance = {
-                ...foundFileHash[0],
-                partialDataToDisplay: partialData
-            };
-            this.setState({foundFileInstance: fileInstance});
-        } else {
-            window.location.assign("#/");
+            this.setState({foundFileInstance: foundFileHash[0]});
         }
-
-        let textArea = document.getElementById("ipfs-textarea");
-        if (textArea) {
-            textArea.scroll(0, 0);
-        }
-
-    }
+    };
 
     getQueryParamValue(props, queryParam) {
         let url = props.location.search;
@@ -86,32 +77,37 @@ class SmartFileInformationPage extends Component {
             case "jpg":
             case "jpeg":
             case "png":
-                if (this.state.foundFileInstance.fileHash !== "") {
-                    if (this.state.foundFileInstance.isValid) {
+                switch (this.state.foundFileInstance.isValid) {
+                    case true:
                         dataToDisplay = <img className="ipfs-image"
                                              src={(ipfsPath + this.state.foundFileInstance.fileHash)}
                                              alt="IPFS object"/>;
-                    } else {
+                        break;
+                    case false:
                         dataToDisplay = <p className="image-corrupted">YOUR IMAGE IS CORRUPTED</p>;
-                    }
-                } else {
-                    dataToDisplay = <div className="image-loader"/>
+                        break;
+                    default:
+                        dataToDisplay = <div className="image-loader"/>
                 }
                 break;
             default :
-                dataToDisplay = <div>
-                    <h6>Showing the first 2000 characters of your uploaded file</h6>
-                    <textarea id="ipfs-textarea"
-                              value={this.state.foundFileInstance.partialDataToDisplay}
-                              className={this.state.foundFileInstance.isValid === true ? "" : "invalid-text-area"}
-                              disabled/>
-                </div>
+                if (this.state.foundFileInstance.isValid === undefined) {
+                    dataToDisplay = <div className="image-loader"/>;
+                } else {
+                    dataToDisplay = <div>
+                        <h6>Showing the first 2000 characters of your uploaded file</h6>
+                        <textarea id="ipfs-textarea"
+                                  value={this.state.foundFileInstance.partialDataToDisplay}
+                                  className={this.state.foundFileInstance.isValid === true ? "" : "invalid-text-area"}
+                                  disabled/>
+                    </div>
+                }
         }
 
         return (
             <div className="info-page-main-div">
                 <h3>
-                    Info about <a href={ipfsPath + this.state.foundFileInstance.fileHash}
+                    Info about <a href={ipfsPath + this.state.fileHash}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   title="Click to open the link in IPFS">
@@ -130,36 +126,53 @@ class SmartFileInformationPage extends Component {
                 {
                     dataToDisplay
                 }
-                <p className="file-hash-p"><strong>Total size: </strong>{this.state.foundFileInstance.totalSize} bytes</p>
-                <p><strong>Nr of links: </strong>{this.state.foundFileInstance.links.length}</p>
+                <p className="file-hash-p"><strong>Total size: </strong>
+                    {
+                        this.state.foundFileInstance !== undefined ?
+                            this.state.foundFileInstance.totalSize
+                            :
+                            0
+                    } bytes
+                </p>
+                <p><strong>Nr of links: </strong>
+                    {
+                        this.state.foundFileInstance.links !== undefined ?
+                            this.state.foundFileInstance.links.length
+                            :
+                            0
+                    }
+                </p>
                 <ol>
                     {
-                        this.state.foundFileInstance.links.map((link, index) =>
-                            <div key={index}>
-                                <li>
-                                    <p><strong>Link size: </strong>{link.size} bytes</p>
-                                    <div className="p-ipfs-check">
-                                        <p>
-                                            <strong>Link hash: </strong>
-                                            <a href={("#/uploaded-files/" + link.hash)}
-                                               title="Click to open the link in DRDS">
-                                                {" " + link.hash}
-                                            </a>
-                                        </p>
-                                        {
-                                            link.linkIsValid ?
-                                                <ValidFileIcon id={link.hash}/>
-                                                :
-                                                link.linkIsValid === false ?
-                                                    <InvalidFileIcon id={link.hash}/>
+                        this.state.foundFileInstance.links !== undefined ?
+                            this.state.foundFileInstance.links.map((link, index) =>
+                                <div key={index}>
+                                    <li>
+                                        <p><strong>Link size: </strong>{link.size} bytes</p>
+                                        <div className="p-ipfs-check">
+                                            <p>
+                                                <strong>Link hash: </strong>
+                                                <a href={("#/uploaded-files/" + this.state.foundFileInstance.fileHash + "/" + link.hash)}
+                                                   title="Click to open the link in DRDS">
+                                                    {" " + link.hash}
+                                                </a>
+                                            </p>
+                                            {
+                                                link.linkIsValid ?
+                                                    <ValidFileIcon id={link.hash}/>
                                                     :
-                                                    ""
-                                        }
-                                    </div>
-                                </li>
-                                <hr/>
-                            </div>
-                        )
+                                                    link.linkIsValid === false ?
+                                                        <InvalidFileIcon id={link.hash}/>
+                                                        :
+                                                        ""
+                                            }
+                                        </div>
+                                    </li>
+                                    <hr/>
+                                </div>
+                            )
+                            :
+                            ""
                     }
                 </ol>
             </div>

@@ -14,6 +14,8 @@ import RequestUsername from "./dumb/RequestUsername";
 
 import Homepage from "./smart/SmartHomepage";
 import SmartFileInformationPage from "./smart/SmartFileInformationPage";
+import SmartFileLinkPage from "./smart/SmartFileLinkPage";
+import {getPartialData, ipfs} from "./util/IPFSUtil";
 
 
 class App extends Component {
@@ -41,7 +43,6 @@ class App extends Component {
                 window.location.reload();
             });
         }
-        // TODO: add here the file uploads & validations so that it can be used throughout the app
     }
 
     async loadWeb3() {
@@ -88,10 +89,79 @@ class App extends Component {
                     alert("Cannot load username! Make sure the contract is deployed!");
                     console.log(error);
                 });
+            this.props.ethState.contract.methods
+                .getUploadedFiles()
+                .call({from: this.props.ethState.accountAddress})
+                .then(uploadedFiles => {
+                    this.props.onLoadedUploadedFilesFromEth(uploadedFiles);
+                    this.validateIpfsFiles();
+                })
+                .catch(error => console.log(error));
         } else {
             alert("Smart contract not deployed to detected network!");
         }
     }
+
+    validateIpfsFiles = async () => {
+        let uploadedFiles = this.props.ipfsState.uploadedFiles.concat([]);
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            let isValid = undefined;
+            let linkResult = [];
+            let totalSize = 0;
+            try {
+                let nodeData = await ipfs.object.get(uploadedFiles[i].fileHash);
+                isValid = true;
+                totalSize = nodeData.size;
+
+                let links = [];
+                nodeData._links.forEach(link => links.push({size: link.Tsize, hash: link.Hash.string}));
+                for (let j = 0; j < links.length; j++) {
+                    let linkIsValid = undefined;
+                    let partialDataToDisplay = '';
+                    try {
+                        partialDataToDisplay = await getPartialData(links[j].hash, 2000);
+                        linkIsValid = true;
+                    } catch (e) {
+                        if (e.message.includes("block in storage has different hash than requested")) {
+                            linkIsValid = false;
+                            isValid = false;
+                            partialDataToDisplay = "INVALID FILE";
+                        }
+                    }
+
+                    let updatedLink = {
+                        ...links[j],
+                        linkIsValid: linkIsValid,
+                        partialDataToDisplay: partialDataToDisplay
+                    };
+
+                    linkResult.push(updatedLink);
+                }
+            } catch (e) {
+                if (e.message.includes("block in storage has different hash than requested")) {
+                    isValid = false;
+                } else if (e.message === "Failed to fetch") {
+                    alert("You are not connected to an IPFS node!");
+                } else {
+                    console.log(e);
+                }
+            }
+
+            let partialData = "INVALID FILE";
+            if (isValid) {
+                partialData = await getPartialData(uploadedFiles[i].fileHash, 2000);
+            }
+
+            let updatedFile = {
+                ...uploadedFiles[i],
+                totalSize: totalSize,
+                isValid: isValid,
+                links: linkResult,
+                partialDataToDisplay: partialData
+            };
+            this.props.onValidateLink(updatedFile);
+        }
+    };
 
     requestedUsernameChange = (event) => {
         let requestedUsername = event.target.value;
@@ -124,6 +194,7 @@ class App extends Component {
                         <Switch>
                             <Route exact component={Homepage} path="/"/>
                             <Route exact component={SmartFileInformationPage} path="/uploaded-files/:fileHash"/>
+                            <Route exact component={SmartFileLinkPage} path="/uploaded-files/:fileHash/:linkHash"/>
                         </Switch>
                     </HashRouter>;
                 }
@@ -146,7 +217,8 @@ class App extends Component {
 
 const mapStateToProps = state => {
     return {
-        ethState: state.ethState
+        ethState: state.ethState,
+        ipfsState: state.ipfsState
     };
 };
 
@@ -155,7 +227,9 @@ const mapDispatchToProps = dispatch => {
         onAccountAddressChange: (value) => dispatch({type: "ACCOUNT_ADDRESS_CHANGE", value: value}),
         onContractChange: (value) => dispatch({type: "CONTRACT_CHANGE", value: value}),
         onRequestedUsernameSave: (value) => dispatch({type: "REQUESTED_USERNAME_SAVE", value: value}),
-        onUsernameChange: (value) => dispatch({type: "USERNAME_CHANGE", value: value})
+        onUsernameChange: (value) => dispatch({type: "USERNAME_CHANGE", value: value}),
+        onLoadedUploadedFilesFromEth: (uploadedFiles) => dispatch({type: "LOADED_FROM_ETH", value: uploadedFiles}),
+        onValidateLink: (updatedFiles) => dispatch({type: "VALIDATED_LINK", value: updatedFiles})
     }
 };
 
