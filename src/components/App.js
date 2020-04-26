@@ -41,6 +41,7 @@ class App extends Component {
                 window.location.reload();
             });
         }
+        // TODO: add here the file uploads & validations so that it can be used throughout the app
     }
 
     async loadWeb3() {

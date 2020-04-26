@@ -9,6 +9,7 @@ const FilePanel = ({fileInfo, fileHashAddedEvent, toggleModalState}) => (
         <div className="file-name-div">
             <p><strong>Name: </strong>{fileInfo.fileName}</p>
             <button className="btn btn-primary see-details-button"
+                    disabled={fileInfo.isValid === undefined}
                     onClick={() => {
                         let fileType = fileInfo.fileName.substring(fileInfo.fileName.lastIndexOf(".") + 1);
                         window.location.assign(("#/uploaded-files/" + fileInfo.fileHash + "?fileType=" + fileType));

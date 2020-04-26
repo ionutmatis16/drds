@@ -15,7 +15,7 @@ html {
 }
 
 .main-panel-div {
-    margin-top:70px;
+    margin-top: 70px;
     text-align: center;
 }
 
@@ -73,9 +73,9 @@ html {
 }
 
 .info-page-main-div {
-    margin-left: 5%;
+    margin-left: 10%;
     margin-top: 100px;
-    margin-right: 5%;
+    margin-right: 10%;
 }
 
 .ipfs-image {
@@ -135,4 +135,34 @@ html {
 
 .opacity-1 {
     opacity: 1 !important;
+}
+
+.invalid-text-area {
+    border: 2px solid red;
+    color: red;
+    font-weight: bold;
+}
+
+.image-corrupted {
+    color: red;
+    font-weight: bold;
+}
+
+.image-loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 100px;
+    height: 100px;
+    -webkit-animation: spin 2s linear infinite; /* Safari */
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }

@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {ipfs} from '../util/IPFSUtil';
+import {getPartialData, ipfs} from '../util/IPFSUtil';
 import {connect} from 'react-redux';
 import UploadFileForm from "../dumb/UploadFileForm";
 import UploadedFilesPanel from "../dumb/UploadedFilesPanel";
@@ -10,9 +10,7 @@ class SmartHomepage extends Component {
         super(props);
         this.state = {
             fileBuffer: null,
-            ipfsHash: null,
             fileName: null,
-            uploadedFiles: [],
             fileHashAddedEvents: []
         };
     }
@@ -73,7 +71,7 @@ class SmartHomepage extends Component {
             .getUploadedFiles()
             .call({from: this.props.ethState.accountAddress})
             .then(uploadedFiles => {
-                this.setState({uploadedFiles});
+                this.props.onLoadedUploadedFilesFromEth(uploadedFiles);
                 this.validateIpfsFiles();
             })
             .catch(error => console.log(error));
@@ -91,26 +89,57 @@ class SmartHomepage extends Component {
     };
 
     validateIpfsFiles = async () => {
-        let uploadedFiles = this.state.uploadedFiles;
+        let uploadedFiles = this.props.ipfsState.uploadedFiles.concat([]);
         let result = [];
         for (let i = 0; i < uploadedFiles.length; i++) {
             let isValid = undefined;
+            let linkResult = [];
+            let totalSize = 0;
             try {
-                await ipfs.files.stat("/ipfs/" + uploadedFiles[i].fileHash);
+                let nodeData = await ipfs.object.get(uploadedFiles[i].fileHash);
                 isValid = true;
-            } catch (error) {
-                if (error.message.includes("block in storage has different hash than requested")) {
-                    isValid = false;
+                totalSize = nodeData.size;
+
+                let links = [];
+                nodeData._links.forEach(link => links.push({size: link.Tsize, hash: link.Hash.string}));
+                for (let j = 0; j < links.length; j++) {
+                    let linkIsValid = undefined;
+                    let partialDataToDisplay = '';
+                    try {
+                        partialDataToDisplay = await getPartialData(links[j].hash, 2000);
+                        linkIsValid = true;
+                    } catch (e) {
+                        if (e.message.includes("block in storage has different hash than requested")) {
+                            linkIsValid = false;
+                            isValid = false;
+                        }
+                    }
+
+                    let updatedLink = {
+                        ...links[j],
+                        linkIsValid: linkIsValid,
+                        partialDataToDisplay: partialDataToDisplay
+                    };
+
+                    linkResult.push(updatedLink);
+                }
+            } catch (e) {
+                if (e.message === "Failed to fetch") {
+                    alert("You are not connected to an IPFS node!");
+                } else {
+                    console.log(e);
                 }
             }
 
             let updatedFile = {
                 ...uploadedFiles[i],
-                isValid: isValid
+                totalSize: totalSize,
+                isValid: isValid,
+                links: linkResult
             };
             result.push(updatedFile);
         }
-        this.setState({uploadedFiles: result});
+        this.props.onValidateLinks(result);
     };
 
     addTransactionInfoToFile = (eventResult) => {
@@ -155,7 +184,7 @@ class SmartHomepage extends Component {
                         <UploadFileForm captureFile={this.captureFile}
                                         onSubmit={this.onSubmit}
                                         fileBuffer={this.state.fileBuffer}/>
-                        <UploadedFilesPanel uploadedFiles={this.state.uploadedFiles}
+                        <UploadedFilesPanel uploadedFiles={this.props.ipfsState.uploadedFiles}
                                             fileHashAddedEvents={this.state.fileHashAddedEvents}
                                             toggleModalState={this.toggleModalState}/>
                     </div>
@@ -174,7 +203,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        onFileUpload: (fileHash) => dispatch({type: "FILE_UPLOADED", value: fileHash})
+        onLoadedUploadedFilesFromEth: (uploadedFiles) => dispatch({type: "LOADED_FROM_ETH", value: uploadedFiles}),
+        onValidateLinks: (updatedFiles) => dispatch({type: "VALIDATED_LINKS", value: updatedFiles})
     }
 };
 
