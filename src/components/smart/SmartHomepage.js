@@ -46,7 +46,7 @@ class SmartHomepage extends Component {
             }
             console.log("Hash of the uploaded file: " + fileHash);
             this.props.ethState.contract.methods
-                .addFileHash(this.state.fileName, fileHash, this.props.ethState.username)
+                .addFileHash(this.state.fileName, fileHash)
                 .send({from: this.props.ethState.accountAddress})
                 .then(() => {
                     window.location.reload();

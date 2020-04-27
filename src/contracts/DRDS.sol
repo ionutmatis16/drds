@@ -3,17 +3,11 @@ pragma experimental ABIEncoderV2; // so that I can return structs from a functio
 
 contract DRDS {
 
-    struct InformationAuthor {
-        address addr;
-        string username;
-    }
-
     struct FileInfo {
         string fileName;
         string fileHash;
     }
 
-    mapping(address => string) userNames;
     event FileHashAdded(address indexed userAddress, string fileHash);
 
     // sa tin istoricul update-urilor
@@ -22,7 +16,7 @@ contract DRDS {
 
     // ca owner ar trebuit sa poti face la update la un fisier incarcat (cu nou hash?)
 
-    mapping(string => InformationAuthor) fileHashes;
+    mapping(string => address) fileHashes;
     // first string: file-label / about what info I refer to. First file hash?
     // second string: new, edited file hash
     // SAU
@@ -32,28 +26,13 @@ contract DRDS {
 
     mapping(address => FileInfo[]) uploadedFiles;
     // istoric il scot din event-uri
-	
-	// sa trimit pe frontend si hash-ul transactiei, ca un fel de bon (receipt)
-    // o sa fie din event probabil
 
-    function addFileHash(string memory _fileName, string memory _fileHash, string memory _username) public {
-        require(fileHashes[_fileHash].addr == address(0), "File already in the system!");
+    function addFileHash(string memory _fileName, string memory _fileHash) public {
+        require(fileHashes[_fileHash] == address(0), "File already in the system!");
 
-        fileHashes[_fileHash] = InformationAuthor({addr : msg.sender, username : _username});
-        uploadedFiles[msg.sender].push(FileInfo(_fileName,_fileHash));
+        fileHashes[_fileHash] = msg.sender;
+        uploadedFiles[msg.sender].push(FileInfo(_fileName, _fileHash));
         emit FileHashAdded(msg.sender, _fileHash);
-    }
-
-    function getAuthor(string memory _fileHash) public view returns (InformationAuthor memory author) {
-        return fileHashes[_fileHash];
-    }
-
-    function addUsername(string memory _username) public {
-        userNames[msg.sender] = _username;
-    }
-
-    function getUsername() public view returns (string memory) {
-        return userNames[msg.sender];
     }
 
     function getUploadedFiles() public view returns (FileInfo[] memory) {

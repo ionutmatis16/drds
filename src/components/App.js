@@ -10,7 +10,6 @@ import Web3 from "web3";
 import MyNavbar from "./dumb/MyNavbar";
 import MetamaskNotInstalled from "./dumb/MetamaskNotInstalled";
 import ConnectToMetamask from "./dumb/ConnectToMetamask";
-import RequestUsername from "./dumb/RequestUsername";
 
 import Homepage from "./smart/SmartHomepage";
 import SmartFileInformationPage from "./smart/SmartFileInformationPage";
@@ -24,7 +23,7 @@ class App extends Component {
         super(props);
         this.state = {
             metamaskStatus: null,
-            requestedUsername: ''
+            loadedFiles: false
         }
     }
 
@@ -82,19 +81,12 @@ class App extends Component {
             const contract = new web3.eth.Contract(abi, smartContractAddress);
             this.props.onContractChange(contract);
             this.props.ethState.contract.methods
-                .getUsername()
-                .call({from: this.props.ethState.accountAddress})
-                .then(username => this.props.onUsernameChange(username))
-                .catch(error => {
-                    alert("Cannot load username! Make sure the contract is deployed!");
-                    console.log(error);
-                });
-            this.props.ethState.contract.methods
                 .getUploadedFiles()
                 .call({from: this.props.ethState.accountAddress})
                 .then(uploadedFiles => {
                     this.props.onLoadedUploadedFilesFromEth(uploadedFiles);
                     this.validateIpfsFiles();
+                    this.setState({loadedFiles: true});
                 })
                 .catch(error => console.log(error));
         } else {
@@ -163,20 +155,6 @@ class App extends Component {
         }
     };
 
-    requestedUsernameChange = (event) => {
-        let requestedUsername = event.target.value;
-        this.setState({requestedUsername: requestedUsername});
-    };
-
-    saveRequestedUsername = (event) => {
-        event.preventDefault();
-        this.props.ethState.contract.methods
-            .addUsername(this.state.requestedUsername.trim())
-            .send({from: this.props.ethState.accountAddress})
-            .then(() => this.props.onRequestedUsernameSave(this.state.requestedUsername.trim()))
-            .catch(error => alert(error));
-    };
-
     render() {
         let componentToRender;
 
@@ -185,11 +163,7 @@ class App extends Component {
                 componentToRender = <MetamaskNotInstalled/>;
                 break;
             case "connected":
-                if (this.props.ethState.username === '') {
-                    componentToRender = <RequestUsername requestedUsername={this.state.requestedUsername}
-                                                         requestedUsernameChange={this.requestedUsernameChange}
-                                                         saveRequestedUsername={this.saveRequestedUsername}/>;
-                } else {
+                if (this.state.loadedFiles === true) {
                     componentToRender = <HashRouter>
                         <Switch>
                             <Route exact component={Homepage} path="/"/>
@@ -226,8 +200,6 @@ const mapDispatchToProps = dispatch => {
     return {
         onAccountAddressChange: (value) => dispatch({type: "ACCOUNT_ADDRESS_CHANGE", value: value}),
         onContractChange: (value) => dispatch({type: "CONTRACT_CHANGE", value: value}),
-        onRequestedUsernameSave: (value) => dispatch({type: "REQUESTED_USERNAME_SAVE", value: value}),
-        onUsernameChange: (value) => dispatch({type: "USERNAME_CHANGE", value: value}),
         onLoadedUploadedFilesFromEth: (uploadedFiles) => dispatch({type: "LOADED_FROM_ETH", value: uploadedFiles}),
         onValidateLink: (updatedFiles) => dispatch({type: "VALIDATED_LINK", value: updatedFiles})
     }

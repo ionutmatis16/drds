@@ -1,7 +1,6 @@
 const initialState = {
     contract: null,
-    accountAddress: '',
-    username: '',
+    accountAddress: ''
 };
 
 function changeEthState(state, property, value) {
@@ -17,10 +16,6 @@ function ethReducer(state = initialState, action) {
             return changeEthState(state, "accountAddress", action.value);
         case "CONTRACT_CHANGE":
             return changeEthState(state, "contract", action.value);
-        case "REQUESTED_USERNAME_SAVE":
-            return changeEthState(state, "username", action.value);
-        case "USERNAME_CHANGE":
-            return changeEthState(state, "username", action.value);
         default :
             return state;
     }
