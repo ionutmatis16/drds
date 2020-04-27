@@ -14,14 +14,6 @@ const MyNavbar = ({accountAddress, username}) => (
                     {
                         accountAddress !== '' ?
                             <span className="text-white">
-                                {
-                                    username !== '' ?
-                                        <span>
-                                            <strong>Username: </strong>{username}
-                                        </span>
-                                        :
-                                        ""
-                                }
                                 <strong> Account address: </strong>{accountAddress}
                             </span>
                             :
