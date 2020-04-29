@@ -34,7 +34,7 @@ class SmartFileLinkPage extends Component {
         const urlParts = this.props.location.pathname.split('/');
         this.setState({
             mainHash: urlParts[2],
-            linkHash: urlParts[3]
+            linkHash: urlParts[4]
         }, () => {
             let unsubscribe = store.subscribe(() => this.getIpfsLinkData(this.state.mainHash, this.state.linkHash));
             this.setState({unsubscribe});

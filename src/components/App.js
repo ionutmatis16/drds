@@ -80,19 +80,46 @@ class App extends Component {
             const smartContractAddress = networkData.address;
             const contract = new web3.eth.Contract(abi, smartContractAddress);
             this.props.onContractChange(contract);
-            this.props.ethState.contract.methods
-                .getUploadedFiles()
-                .call({from: this.props.ethState.accountAddress})
-                .then(uploadedFiles => {
-                    this.props.onLoadedUploadedFilesFromEth(uploadedFiles);
-                    this.validateIpfsFiles();
-                    this.setState({loadedFiles: true});
-                })
-                .catch(error => console.log(error));
+            this.getUploadedFiles();
+            this.loadEventsFromContract();
         } else {
             alert("Smart contract not deployed to detected network!");
         }
     }
+
+    getUploadedFiles = () => {
+        this.props.ethState.contract.methods
+            .getUploadedFiles()
+            .call({from: this.props.ethState.accountAddress})
+            .then(uploadedFiles => {
+                this.getLatestVersionOfUploadedFiles(uploadedFiles)
+                    .then((finalVersions) => {
+                        this.props.onLoadedUploadedFilesFromEth(finalVersions);
+                        this.validateIpfsFiles();
+                        this.setState({loadedFiles: true});
+                    });
+            })
+            .catch(error => console.log(error));
+    };
+
+    getLatestVersionOfUploadedFiles = async (uploadedFiles) => {
+        let finalVersions = [];
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            await this.props.ethState.contract.methods
+                .getLatestVersionOfFile(uploadedFiles[i].fileHash)
+                .call({from: this.props.ethState.accountAddress})
+                .then(result => {
+                    let additionalInfo = {
+                        ...result,
+                        originalFileHash: uploadedFiles[i].fileHash
+                    };
+                    finalVersions.push(additionalInfo)
+                })
+                .catch(err => alert(err));
+        }
+
+        return finalVersions;
+    };
 
     validateIpfsFiles = async () => {
         let uploadedFiles = this.props.ipfsState.uploadedFiles.concat([]);
@@ -155,6 +182,68 @@ class App extends Component {
         }
     };
 
+    loadEventsFromContract = () => {
+        this.props.ethState.contract.events
+            .FileHashAdded({
+                filter: {userAddress: this.props.ethState.accountAddress},
+                fromBlock: 0
+            }, (error, eventResult) => {
+                if (error) {
+                    console.log('Error in FileHashAdded event handler: ' + error);
+                } else {
+                    this.resolveFileHashAddedEvent(eventResult);
+                }
+            });
+        this.props.ethState.contract.events
+            .FileEdited({
+                filter: {userAddress: this.props.ethState.accountAddress},
+                fromBlock: 0
+            }, (error, eventResult) => {
+                if (error) {
+                    console.log('Error in FileEdited event handler: ' + error);
+                } else {
+                    this.resolveFileEditedEvent(eventResult);
+                }
+            });
+    };
+
+
+    resolveFileHashAddedEvent = (eventResult) => {
+        let fileHashAddedEvent = {
+            contractAddress: eventResult.address,
+            blockHash: eventResult.blockHash,
+            blockNumber: eventResult.blockNumber,
+            fileHash: eventResult.returnValues.fileHash,
+            authorAddress: eventResult.returnValues.userAddress,
+            transactionHash: eventResult.transactionHash,
+            transactionIndex: eventResult.transactionIndex,
+            eventType: eventResult.event,
+            showModal: false
+        };
+
+        let events = this.props.ethState.fileHashAddedEvents.concat([fileHashAddedEvent]);
+        this.props.onFileHashAddedEvents(events);
+    };
+
+    resolveFileEditedEvent = (eventResult) => {
+        let fileEditedEvent = {
+            contractAddress: eventResult.address,
+            blockHash: eventResult.blockHash,
+            blockNumber: eventResult.blockNumber,
+            firstFileHash: eventResult.returnValues.firstFileHash,
+            newFileName: eventResult.returnValues.newFileName,
+            newFileHash: eventResult.returnValues.newFileHash,
+            authorAddress: eventResult.returnValues.userAddress,
+            transactionHash: eventResult.transactionHash,
+            transactionIndex: eventResult.transactionIndex,
+            eventType: eventResult.event,
+            showModal: false
+        };
+
+        let events = this.props.ethState.fileEditedEvents.concat([fileEditedEvent]);
+        this.props.onFileEditedEvents(events);
+    };
+
     render() {
         let componentToRender;
 
@@ -168,7 +257,7 @@ class App extends Component {
                         <Switch>
                             <Route exact component={Homepage} path="/"/>
                             <Route exact component={SmartFileInformationPage} path="/uploaded-files/:fileHash"/>
-                            <Route exact component={SmartFileLinkPage} path="/uploaded-files/:fileHash/:linkHash"/>
+                            <Route exact component={SmartFileLinkPage} path="/uploaded-files/:fileHash/file-link/:linkHash"/>
                         </Switch>
                     </HashRouter>;
                 }
@@ -201,7 +290,9 @@ const mapDispatchToProps = dispatch => {
         onAccountAddressChange: (value) => dispatch({type: "ACCOUNT_ADDRESS_CHANGE", value: value}),
         onContractChange: (value) => dispatch({type: "CONTRACT_CHANGE", value: value}),
         onLoadedUploadedFilesFromEth: (uploadedFiles) => dispatch({type: "LOADED_FROM_ETH", value: uploadedFiles}),
-        onValidateLink: (updatedFiles) => dispatch({type: "VALIDATED_LINK", value: updatedFiles})
+        onValidateLink: (updatedFiles) => dispatch({type: "VALIDATED_LINK", value: updatedFiles}),
+        onFileHashAddedEvents: (events) => dispatch({type: "LOADED_ADDED_EVENTS", value: events}),
+        onFileEditedEvents: (events) => dispatch({type: "LOADED_EDITED_EVENTS", value: events})
     }
 };
 

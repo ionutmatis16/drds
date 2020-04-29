@@ -3,19 +3,34 @@ import {ipfsPath} from "../util/IPFSUtil";
 import Modal from "react-bootstrap/Modal";
 import ValidFileIcon from "./ValidFileIcon";
 import InvalidFileIcon from "./InvalidFileIcon";
+import ReactTooltip from "react-tooltip";
 
-const FilePanel = ({fileInfo, fileHashAddedEvent, toggleModalState}) => (
+const FilePanel = ({fileInfo, eventToDisplay, toggleModalState, onFileEdit}) => (
     <div className="uploaded-file-div">
         <div className="file-name-div">
             <p><strong>Name: </strong>{fileInfo.fileName}</p>
-            <button className="btn btn-primary see-details-button"
-                    disabled={fileInfo.isValid === undefined}
-                    onClick={() => {
-                        let fileType = fileInfo.fileName.substring(fileInfo.fileName.lastIndexOf(".") + 1);
-                        window.location.assign(("#/uploaded-files/" + fileInfo.fileHash + "?fileType=" + fileType));
-                    }}>
-                See details
-            </button>
+            <span>
+                <button data-for={("edit-" + fileInfo.fileHash)}
+                        data-tip="Upload the edited file. It will be submitted automatically."
+                        className="btn btn-warning edit-button see-details-button"
+                        onClick={() => onFileEdit(fileInfo.fileHash)}>
+                    Edit
+                </button>
+                <input id={("file-input-edit-" + fileInfo.fileHash)} type="file" hidden/>
+                <ReactTooltip id={("edit-" + fileInfo.fileHash)}
+                              className="opacity-1"
+                              textColor="black"
+                              backgroundColor="#ffc107"
+                              effect="solid"/>
+                <button className="btn btn-primary see-details-button"
+                        disabled={fileInfo.isValid === undefined}
+                        onClick={() => {
+                            let fileType = fileInfo.fileName.substring(fileInfo.fileName.lastIndexOf(".") + 1);
+                            window.location.assign(("#/uploaded-files/" + fileInfo.fileHash + "?fileType=" + fileType));
+                        }}>
+                    See details
+                </button>
+            </span>
         </div>
         <div className="p-ipfs-check">
             <p><strong>IPFS File hash: </strong>
@@ -39,19 +54,19 @@ const FilePanel = ({fileInfo, fileHashAddedEvent, toggleModalState}) => (
         <p className="file-hash-p">
             <strong>Ethereum Transaction hash: </strong>
             {
-                fileHashAddedEvent === undefined ?
+                eventToDisplay === undefined ?
                     ""
                     :
                     <span className="tx-hash-button"
-                          onClick={() => toggleModalState(fileHashAddedEvent.transactionHash, true)}>
-                {fileHashAddedEvent.transactionHash}
+                          onClick={() => toggleModalState(eventToDisplay.transactionHash, true)}>
+                {eventToDisplay.transactionHash}
                 </span>
             }
 
-            <Modal show={fileHashAddedEvent === undefined ? false : fileHashAddedEvent.showModal}
+            <Modal show={eventToDisplay === undefined ? false : eventToDisplay.showModal}
                    onHide={() => {
-                       if (fileHashAddedEvent !== undefined) {
-                           toggleModalState(fileHashAddedEvent.transactionHash, false)
+                       if (eventToDisplay !== undefined) {
+                           toggleModalState(eventToDisplay.transactionHash, false)
                        }
                    }}>
                 <Modal.Header closeButton>
@@ -59,32 +74,53 @@ const FilePanel = ({fileInfo, fileHashAddedEvent, toggleModalState}) => (
                 </Modal.Header>
                 <Modal.Body>
                     <p>
+                        <strong>Event type: </strong>
+                        {eventToDisplay === undefined ? '' : eventToDisplay.eventType}
+                    </p>
+                    <p>
                         <strong>Contract address: </strong>
-                        {fileHashAddedEvent === undefined ? '' : fileHashAddedEvent.contractAddress}
+                        {eventToDisplay === undefined ? '' : eventToDisplay.contractAddress}
                     </p>
                     <p>
                         <strong>Block hash: </strong>
-                        {fileHashAddedEvent === undefined ? '' : fileHashAddedEvent.blockHash}
+                        {eventToDisplay === undefined ? '' : eventToDisplay.blockHash}
                     </p>
                     <p>
                         <strong>Block number: </strong>
-                        {fileHashAddedEvent === undefined ? '' : fileHashAddedEvent.blockNumber}
+                        {eventToDisplay === undefined ? '' : eventToDisplay.blockNumber}
                     </p>
-                    <p>
-                        <strong>IPFS file hash: </strong>
-                        {fileHashAddedEvent === undefined ? '' : fileHashAddedEvent.fileHash}
-                    </p>
+                    {
+                        eventToDisplay !== undefined ?
+                            eventToDisplay.eventType === "FileHashAdded" ?
+                                <p>
+                                    <strong>IPFS file hash: </strong>
+                                    {eventToDisplay === undefined ? '' : eventToDisplay.fileHash}
+                                </p>
+                                :
+                                <div>
+                                    <p>
+                                        <strong>Original IPFS file hash: </strong>
+                                        {eventToDisplay.firstFileHash}
+                                    </p>
+                                    <p>
+                                        <strong>Edited IPFS file hash: </strong>
+                                        {eventToDisplay.newFileHash}
+                                    </p>
+                                </div>
+                            :
+                            ""
+                    }
                     <p>
                         <strong>Author address: </strong>
-                        {fileHashAddedEvent === undefined ? '' : fileHashAddedEvent.authorAddress}
+                        {eventToDisplay === undefined ? '' : eventToDisplay.authorAddress}
                     </p>
                     <p>
                         <strong>Ethereum transaction hash: </strong>
-                        {fileHashAddedEvent === undefined ? '' : fileHashAddedEvent.transactionHash}
+                        {eventToDisplay === undefined ? '' : eventToDisplay.transactionHash}
                     </p>
                     <p>
                         <strong>Transaction index: </strong>
-                        {fileHashAddedEvent === undefined ? '' : fileHashAddedEvent.transactionIndex}
+                        {eventToDisplay === undefined ? '' : eventToDisplay.transactionIndex}
                     </p>
                 </Modal.Body>
             </Modal>

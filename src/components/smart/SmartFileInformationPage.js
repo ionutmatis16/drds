@@ -43,6 +43,7 @@ class SmartFileInformationPage extends Component {
                 let unsubscribe = store.subscribe(() => this.getIpfsData(this.state.fileHash));
                 this.setState({unsubscribe});
                 this.getIpfsData(this.state.fileHash);
+                // TODO: get the versions of the file
             });
     }
 
@@ -110,9 +111,7 @@ class SmartFileInformationPage extends Component {
                     Info about <a href={ipfsPath + this.state.fileHash}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  title="Click to open the link in IPFS">
-                    {this.state.foundFileInstance.fileHash}
-                </a>
+                                  title="Click to open the link in IPFS">{this.state.foundFileInstance.fileHash}</a>
                     {
                         this.state.foundFileInstance.isValid ?
                             <ValidFileIcon id={this.state.foundFileInstance.fileHash}/>
@@ -152,7 +151,7 @@ class SmartFileInformationPage extends Component {
                                         <div className="p-ipfs-check">
                                             <p>
                                                 <strong>Link hash: </strong>
-                                                <a href={("#/uploaded-files/" + this.state.foundFileInstance.fileHash + "/" + link.hash)}
+                                                <a href={("#/uploaded-files/" + this.state.foundFileInstance.fileHash + "/file-link/" + link.hash)}
                                                    title="Click to open the link in DRDS">
                                                     {" " + link.hash}
                                                 </a>

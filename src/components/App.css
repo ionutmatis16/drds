@@ -176,3 +176,8 @@ html {
         transform: rotate(360deg);
     }
 }
+
+.edit-button {
+    font-weight: 600;
+    margin-right: 15px;
+}

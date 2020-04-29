@@ -1,6 +1,8 @@
 const initialState = {
     contract: null,
-    accountAddress: ''
+    accountAddress: '',
+    fileHashAddedEvents: [],
+    fileEditedEvents: []
 };
 
 function changeEthState(state, property, value) {
@@ -16,6 +18,10 @@ function ethReducer(state = initialState, action) {
             return changeEthState(state, "accountAddress", action.value);
         case "CONTRACT_CHANGE":
             return changeEthState(state, "contract", action.value);
+        case "LOADED_ADDED_EVENTS":
+            return changeEthState(state, "fileHashAddedEvents", action.value);
+        case "LOADED_EDITED_EVENTS":
+            return changeEthState(state, "fileEditedEvents", action.value);
         default :
             return state;
     }
