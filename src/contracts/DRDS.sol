@@ -13,7 +13,7 @@ contract DRDS {
     mapping(string => FileInfo) latestVersionOfFile;
     mapping(address => FileInfo[]) uploadedFiles;
 
-    event FileHashAdded(address indexed userAddress, string fileHash);
+    event FileHashAdded(address indexed userAddress, string fileName, string fileHash);
     event FileEdited(address indexed userAddress, string firstFileHash, string newFileName, string newFileHash);
 
     function addFileHash(string memory _fileName, string memory _fileHash) public {
@@ -25,7 +25,7 @@ contract DRDS {
         firstVersionOfFile[_fileHash] = FileInfo(_fileName, _fileHash);
         latestVersionOfFile[_fileHash] = FileInfo(_fileName, _fileHash);
 
-        emit FileHashAdded(msg.sender, _fileHash);
+        emit FileHashAdded(msg.sender, _fileName, _fileHash);
     }
 
     function editFile(string memory _oldFileHash, string memory _newFileName, string memory _newFileHash) public {

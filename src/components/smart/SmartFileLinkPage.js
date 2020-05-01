@@ -4,6 +4,7 @@ import {ipfsPath} from "../util/IPFSUtil";
 import ValidFileIcon from "../dumb/ValidFileIcon";
 import InvalidFileIcon from "../dumb/InvalidFileIcon";
 import store from "../../redux/store/store";
+import {getQueryParamValue} from "../util/ReactUtil";
 
 class SmartFileLinkPage extends Component {
 
@@ -32,9 +33,11 @@ class SmartFileLinkPage extends Component {
 
     resolveUrl() {
         const urlParts = this.props.location.pathname.split('/');
+        let isVersion = getQueryParamValue(this.props.location.search, "isVersion");
         this.setState({
             mainHash: urlParts[2],
-            linkHash: urlParts[4]
+            linkHash: urlParts[4],
+            isVersion: isVersion
         }, () => {
             let unsubscribe = store.subscribe(() => this.getIpfsLinkData(this.state.mainHash, this.state.linkHash));
             this.setState({unsubscribe});
@@ -43,15 +46,23 @@ class SmartFileLinkPage extends Component {
     }
 
     getIpfsLinkData = async (fileHash, linkHash) => {
-        if (this.props.ipfsState.uploadedFiles) {
-            let foundFileHash = this.props.ipfsState.uploadedFiles
-                .filter(uploadedFile => uploadedFile.fileHash === fileHash);
+        if (this.state.isVersion === "true") {
+            let foundLinkHash = this.props.ipfsState.selectedVersionFile.links
+                .filter(link => link.hash === linkHash);
+            if (foundLinkHash.length > 0) {
+                this.setState({linkData: foundLinkHash[0]})
+            }
+        } else {
+            if (this.props.ipfsState.uploadedFiles) {
+                let foundFileHash = this.props.ipfsState.uploadedFiles
+                    .filter(uploadedFile => uploadedFile.fileHash === fileHash);
 
-            if (foundFileHash.length > 0 && foundFileHash[0].links) {
-                let foundLinkHash = foundFileHash[0].links
-                    .filter(link => link.hash === linkHash);
-                if (foundLinkHash.length > 0) {
-                    this.setState({linkData: foundLinkHash[0]})
+                if (foundFileHash.length > 0 && foundFileHash[0].links) {
+                    let foundLinkHash = foundFileHash[0].links
+                        .filter(link => link.hash === linkHash);
+                    if (foundLinkHash.length > 0) {
+                        this.setState({linkData: foundLinkHash[0]})
+                    }
                 }
             }
         }

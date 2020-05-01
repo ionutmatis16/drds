@@ -14,7 +14,8 @@ import ConnectToMetamask from "./dumb/ConnectToMetamask";
 import Homepage from "./smart/SmartHomepage";
 import SmartFileInformationPage from "./smart/SmartFileInformationPage";
 import SmartFileLinkPage from "./smart/SmartFileLinkPage";
-import {getPartialData, ipfs} from "./util/IPFSUtil";
+import {getValidatedFile} from "./util/IPFSUtil";
+import SmartFileVersion from "./smart/SmartFileVersion";
 
 
 class App extends Component {
@@ -27,7 +28,7 @@ class App extends Component {
         }
     }
 
-    async componentWillMount() {
+    async componentDidMount() {
         // TODO: move this outside component & create a button to connect to metamask, as they state in their documentation
         await this.loadWeb3();
         if (this.state.metamaskStatus === "connected") {
@@ -124,61 +125,8 @@ class App extends Component {
     validateIpfsFiles = async () => {
         let uploadedFiles = this.props.ipfsState.uploadedFiles.concat([]);
         for (let i = 0; i < uploadedFiles.length; i++) {
-            let isValid = undefined;
-            let linkResult = [];
-            let totalSize = 0;
-            try {
-                let nodeData = await ipfs.object.get(uploadedFiles[i].fileHash);
-                isValid = true;
-                totalSize = nodeData.size;
-
-                let links = [];
-                nodeData._links.forEach(link => links.push({size: link.Tsize, hash: link.Hash.string}));
-                for (let j = 0; j < links.length; j++) {
-                    let linkIsValid = undefined;
-                    let partialDataToDisplay = '';
-                    try {
-                        partialDataToDisplay = await getPartialData(links[j].hash, 2000);
-                        linkIsValid = true;
-                    } catch (e) {
-                        if (e.message.includes("block in storage has different hash than requested")) {
-                            linkIsValid = false;
-                            isValid = false;
-                            partialDataToDisplay = "INVALID FILE";
-                        }
-                    }
-
-                    let updatedLink = {
-                        ...links[j],
-                        linkIsValid: linkIsValid,
-                        partialDataToDisplay: partialDataToDisplay
-                    };
-
-                    linkResult.push(updatedLink);
-                }
-            } catch (e) {
-                if (e.message.includes("block in storage has different hash than requested")) {
-                    isValid = false;
-                } else if (e.message === "Failed to fetch") {
-                    alert("You are not connected to an IPFS node!");
-                } else {
-                    console.log(e);
-                }
-            }
-
-            let partialData = "INVALID FILE";
-            if (isValid) {
-                partialData = await getPartialData(uploadedFiles[i].fileHash, 2000);
-            }
-
-            let updatedFile = {
-                ...uploadedFiles[i],
-                totalSize: totalSize,
-                isValid: isValid,
-                links: linkResult,
-                partialDataToDisplay: partialData
-            };
-            this.props.onValidateLink(updatedFile);
+            let validatedFile = await getValidatedFile(uploadedFiles[i].fileHash, uploadedFiles[i]);
+            this.props.onValidateFile(validatedFile);
         }
     };
 
@@ -213,6 +161,7 @@ class App extends Component {
             contractAddress: eventResult.address,
             blockHash: eventResult.blockHash,
             blockNumber: eventResult.blockNumber,
+            fileName: eventResult.returnValues.fileName,
             fileHash: eventResult.returnValues.fileHash,
             authorAddress: eventResult.returnValues.userAddress,
             transactionHash: eventResult.transactionHash,
@@ -258,6 +207,7 @@ class App extends Component {
                             <Route exact component={Homepage} path="/"/>
                             <Route exact component={SmartFileInformationPage} path="/uploaded-files/:fileHash"/>
                             <Route exact component={SmartFileLinkPage} path="/uploaded-files/:fileHash/file-link/:linkHash"/>
+                            <Route exact component={SmartFileVersion} path="/uploaded-files/:originalHash/version/:selectedHash"/>
                         </Switch>
                     </HashRouter>;
                 }
@@ -290,7 +240,7 @@ const mapDispatchToProps = dispatch => {
         onAccountAddressChange: (value) => dispatch({type: "ACCOUNT_ADDRESS_CHANGE", value: value}),
         onContractChange: (value) => dispatch({type: "CONTRACT_CHANGE", value: value}),
         onLoadedUploadedFilesFromEth: (uploadedFiles) => dispatch({type: "LOADED_FROM_ETH", value: uploadedFiles}),
-        onValidateLink: (updatedFiles) => dispatch({type: "VALIDATED_LINK", value: updatedFiles}),
+        onValidateFile: (updatedFiles) => dispatch({type: "VALIDATED_LINK", value: updatedFiles}),
         onFileHashAddedEvents: (events) => dispatch({type: "LOADED_ADDED_EVENTS", value: events}),
         onFileEditedEvents: (events) => dispatch({type: "LOADED_EDITED_EVENTS", value: events})
     }

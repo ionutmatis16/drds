@@ -4,6 +4,9 @@ import ValidFileIcon from "../dumb/ValidFileIcon";
 import InvalidFileIcon from "../dumb/InvalidFileIcon";
 import {connect} from "react-redux";
 import store from "../../redux/store/store";
+import {getQueryParamValue} from "../util/ReactUtil";
+import {getFilePreview} from "../util/DRDSUtil";
+import LinkPanel from "../dumb/LinkPanel";
 
 class SmartFileInformationPage extends Component {
 
@@ -19,7 +22,9 @@ class SmartFileInformationPage extends Component {
             },
             fileHash: '',
             fileType: '',
-            unsubscribe: undefined
+            unsubscribe: undefined,
+            originalFileHash: '',
+            versions: []
         }
     }
 
@@ -33,18 +38,49 @@ class SmartFileInformationPage extends Component {
     }
 
     async resolveUrl() {
-        const fileType = this.getQueryParamValue(this.props, "fileType");
+        const fileType = getQueryParamValue(this.props.location.search, "fileType");
         this.setState({fileType});
 
         const lastSlash = this.props.location.pathname.lastIndexOf('/');
         const fileHash = this.props.location.pathname.substring(lastSlash + 1);
         this.setState({fileHash},
             () => {
-                let unsubscribe = store.subscribe(() => this.getIpfsData(this.state.fileHash));
+                let unsubscribe = store.subscribe(() => {
+                    this.getIpfsData(this.state.fileHash);
+                });
                 this.setState({unsubscribe});
                 this.getIpfsData(this.state.fileHash);
-                // TODO: get the versions of the file
+                this.loadVersions();
             });
+    }
+
+    loadVersions() {
+        let originalFileHash = (this.props.ipfsState.uploadedFiles
+            .filter(uploadedFile => uploadedFile.fileHash === this.state.fileHash))[0].originalFileHash;
+        this.setState({originalFileHash});
+
+        let result = [];
+        result = result.concat(this.props.ethState.fileHashAddedEvents
+            .filter(fileEvent => fileEvent.fileHash === originalFileHash));
+
+        result = result.concat(this.props.ethState.fileEditedEvents
+            .filter(fileEvent => fileEvent.firstFileHash === originalFileHash));
+
+        let versions = result.map((event, index) => {
+            if (index === 0) {
+                return {
+                    fileName: event.fileName,
+                    fileHash: event.fileHash
+                }
+            }
+
+            return {
+                fileName: event.newFileName,
+                fileHash: event.newFileHash
+            }
+        });
+
+        this.setState({versions});
     }
 
     getIpfsData = async (fileHash) => {
@@ -56,54 +92,30 @@ class SmartFileInformationPage extends Component {
         }
     };
 
-    getQueryParamValue(props, queryParam) {
-        let url = props.location.search;
-        let questionMark = url.indexOf("?");
-        let params = props.location.search.substring(questionMark + 1).split("&");
-
-        for (let i = 0; i < params.length; i++) {
-            let paramSplit = params[i].split("=");
-            if (paramSplit[0] === queryParam) {
-                return paramSplit[1];
+    onVersionChange = (event) => {
+        let selectedOption = event.target.value;
+        if (selectedOption !== "") {
+            let selectionArray = selectedOption.split("-");
+            if (selectionArray[0] !== this.state.fileHash) {
+                let fileType = selectionArray[2].substring(selectionArray[2].lastIndexOf(".") + 1);
+                window.location.assign("#/uploaded-files/" +
+                    this.state.foundFileInstance.originalFileHash +
+                    "/version/" +
+                    selectionArray[0] +
+                    "?selectionIndex=" + selectionArray[1] +
+                    "&fileType=" + fileType +
+                    "&size=" + this.state.versions.length +
+                    "&latestHash=" + this.state.fileHash +
+                    "&latestValid=" + this.state.foundFileInstance.isValid);
             }
         }
-
-        return '';
-    }
+    };
 
     render() {
-        let dataToDisplay = "";
-
-        switch (this.state.fileType) {
-            case "jpg":
-            case "jpeg":
-            case "png":
-                switch (this.state.foundFileInstance.isValid) {
-                    case true:
-                        dataToDisplay = <img className="ipfs-image"
-                                             src={(ipfsPath + this.state.foundFileInstance.fileHash)}
-                                             alt="IPFS object"/>;
-                        break;
-                    case false:
-                        dataToDisplay = <p className="image-corrupted">YOUR IMAGE IS CORRUPTED</p>;
-                        break;
-                    default:
-                        dataToDisplay = <div className="image-loader"/>
-                }
-                break;
-            default :
-                if (this.state.foundFileInstance.isValid === undefined) {
-                    dataToDisplay = <div className="image-loader"/>;
-                } else {
-                    dataToDisplay = <div>
-                        <h6>Showing the first 2000 characters of your uploaded file</h6>
-                        <textarea id="ipfs-textarea"
-                                  value={this.state.foundFileInstance.partialDataToDisplay}
-                                  className={this.state.foundFileInstance.isValid === true ? "" : "invalid-text-area"}
-                                  disabled/>
-                    </div>
-                }
-        }
+        let dataToDisplay = getFilePreview(this.state.fileType,
+            this.state.foundFileInstance.isValid,
+            this.state.foundFileInstance.fileHash,
+            this.state.foundFileInstance.partialDataToDisplay);
 
         return (
             <div className="info-page-main-div">
@@ -122,6 +134,34 @@ class SmartFileInformationPage extends Component {
                                 ""
                     }
                 </h3>
+                <div className="file-versions-div">
+                    <span>File versions:</span>
+                    <select className="version-select custom-select"
+                            defaultValue={this.state.fileHash}
+                            onChange={(event) => this.onVersionChange(event)}>
+                        <option value="">Choose a version to inspect</option>
+                        {
+                            this.state.versions.map((version, index) => (
+                                <option key={index}
+                                        value={(version.fileHash + "-" + index + "-" + version.fileName)}>
+                                    {
+                                        version.fileHash === this.state.fileHash ?
+                                            "(current) "
+                                            :
+                                            ""
+                                    }
+                                    {
+                                        version.fileHash === this.state.originalFileHash ?
+                                            "(original) "
+                                            :
+                                            ""
+                                    }
+                                    {version.fileHash} - {version.fileName}
+                                </option>
+                            ))
+                        }
+                    </select>
+                </div>
                 {
                     dataToDisplay
                 }
@@ -146,28 +186,8 @@ class SmartFileInformationPage extends Component {
                         this.state.foundFileInstance.links !== undefined ?
                             this.state.foundFileInstance.links.map((link, index) =>
                                 <div key={index}>
-                                    <li>
-                                        <p><strong>Link size: </strong>{link.size} bytes</p>
-                                        <div className="p-ipfs-check">
-                                            <p>
-                                                <strong>Link hash: </strong>
-                                                <a href={("#/uploaded-files/" + this.state.foundFileInstance.fileHash + "/file-link/" + link.hash)}
-                                                   title="Click to open the link in DRDS">
-                                                    {" " + link.hash}
-                                                </a>
-                                            </p>
-                                            {
-                                                link.linkIsValid ?
-                                                    <ValidFileIcon id={link.hash}/>
-                                                    :
-                                                    link.linkIsValid === false ?
-                                                        <InvalidFileIcon id={link.hash}/>
-                                                        :
-                                                        ""
-                                            }
-                                        </div>
-                                    </li>
-                                    <hr/>
+                                    <LinkPanel link={link}
+                                               fileHash={this.state.foundFileInstance.fileHash}/>
                                 </div>
                             )
                             :
@@ -175,12 +195,13 @@ class SmartFileInformationPage extends Component {
                     }
                 </ol>
             </div>
-        )
+        );
     }
 }
 
 const mapStateToProps = state => {
     return {
+        ethState: state.ethState,
         ipfsState: state.ipfsState
     }
 };

@@ -181,3 +181,23 @@ html {
     font-weight: 600;
     margin-right: 15px;
 }
+
+.version-select {
+    margin-left: 5px;
+    width: 70%;
+}
+
+.file-versions-div {
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+.file-versions-div > span {
+    vertical-align: middle;
+    font-weight: 500;
+    font-size: 18px;
+}
+
+.small-icon {
+    font-size: 20px;
+}
