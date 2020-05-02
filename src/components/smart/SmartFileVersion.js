@@ -43,18 +43,21 @@ class SmartFileVersion extends Component {
         }, () => {
             if (this.props.ipfsState.selectedVersionFile.fileHash !== this.state.selectedHash) {
                 this.props.onVersionFileReset();
-                this.validateSelectedHash();
+                this.validateFileHash(this.state.selectedHash, this.props.onSelectedVersionFileChange);
+            }
+            if (this.props.ipfsState.originalVersionFile.fileHash !== this.state.originalHash) {
+                this.validateFileHash(this.state.originalHash, this.props.onOriginalVersionFileChange);
             }
         });
     }
 
-    validateSelectedHash = async () => {
-        let selectedVersionFile = await getValidatedFile(this.state.selectedHash, {});
+    validateFileHash = async (fileHash, callback) => {
+        let selectedVersionFile = await getValidatedFile(fileHash, {});
         selectedVersionFile = {
             ...selectedVersionFile,
-            fileHash: this.state.selectedHash
+            fileHash: fileHash
         };
-        this.props.onSelectedVersionFileChange(selectedVersionFile);
+        callback(selectedVersionFile);
     };
 
     render() {
@@ -83,7 +86,18 @@ class SmartFileVersion extends Component {
                    target="_blank"
                    rel="noopener noreferrer"
                    title="Click to open the link in IPFS"> {this.state.originalHash} </a>
-                add checking
+                {
+                    this.props.ipfsState.originalVersionFile ?
+                        this.props.ipfsState.originalVersionFile.isValid ?
+                            <ValidFileIcon iconClassName="small-icon" id={this.state.latestHash}/>
+                            :
+                            this.props.ipfsState.originalVersionFile.isValid === false ?
+                                <InvalidFileIcon iconClassName="small-icon" id={this.state.latestHash}/>
+                                :
+                                ""
+                        :
+                        ""
+                }
             </h6>
         }
 
@@ -153,6 +167,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         onSelectedVersionFileChange: (file) => dispatch({type: "VERSION_FILE_CHANGED", value: file}),
+        onOriginalVersionFileChange: (file) => dispatch({type: "ORIGINAL_FILE_CHANGED", value: file}),
         onVersionFileReset: () => dispatch({type: "VERSION_FILE_RESET"})
     }
 };

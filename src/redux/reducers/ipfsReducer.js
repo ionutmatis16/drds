@@ -9,7 +9,7 @@ const resetFileState = {
 const initialState = {
     uploadedFiles: [],
     selectedVersionFile: resetFileState,
-    originalVersion: resetFileState
+    originalVersionFile: resetFileState
 };
 
 function changeIpfsState(state, property, value) {
@@ -46,6 +46,8 @@ function ipfsReducer(state = initialState, action) {
             };
         case "VERSION_FILE_CHANGED":
             return changeIpfsState(state, "selectedVersionFile", action.value);
+        case "ORIGINAL_FILE_CHANGED":
+            return changeIpfsState(state, "originalVersionFile", action.value);
         case "VERSION_FILE_RESET":
             return changeIpfsState(state, "selectedVersionFile", resetFileState);
         default:
