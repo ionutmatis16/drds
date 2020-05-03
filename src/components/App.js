@@ -16,6 +16,7 @@ import SmartFileInformationPage from "./smart/SmartFileInformationPage";
 import SmartFileLinkPage from "./smart/SmartFileLinkPage";
 import {getValidatedFile} from "./util/IPFSUtil";
 import SmartFileVersion from "./smart/SmartFileVersion";
+import SmartDebugHash from "./smart/SmartDebugHash";
 
 
 class App extends Component {
@@ -193,6 +194,10 @@ class App extends Component {
         this.props.onFileEditedEvents(events);
     };
 
+    onSearchHashChange = (event) => {
+        this.props.onHashSearchChange(event.target.value);
+    };
+
     render() {
         let componentToRender;
 
@@ -206,8 +211,11 @@ class App extends Component {
                         <Switch>
                             <Route exact component={Homepage} path="/"/>
                             <Route exact component={SmartFileInformationPage} path="/uploaded-files/:fileHash"/>
-                            <Route exact component={SmartFileLinkPage} path="/uploaded-files/:fileHash/file-link/:linkHash"/>
-                            <Route exact component={SmartFileVersion} path="/uploaded-files/:originalHash/version/:selectedHash"/>
+                            <Route exact component={SmartFileLinkPage}
+                                   path="/uploaded-files/:fileHash/file-link/:linkHash"/>
+                            <Route exact component={SmartFileVersion}
+                                   path="/uploaded-files/:originalHash/version/:selectedHash"/>
+                            <Route exact component={SmartDebugHash} path="/debug-hash/:fileHash"/>
                         </Switch>
                     </HashRouter>;
                 }
@@ -219,7 +227,9 @@ class App extends Component {
         return (
             <div className="App">
                 <MyNavbar accountAddress={this.props.ethState.accountAddress}
-                          username={this.props.ethState.username}/>
+                          username={this.props.ethState.username}
+                          searchHashValue={this.props.ipfsState.searchHashValue}
+                          onSearchHashChange={this.onSearchHashChange}/>
                 {
                     componentToRender
                 }
@@ -242,7 +252,8 @@ const mapDispatchToProps = dispatch => {
         onLoadedUploadedFilesFromEth: (uploadedFiles) => dispatch({type: "LOADED_FROM_ETH", value: uploadedFiles}),
         onValidateFile: (updatedFiles) => dispatch({type: "VALIDATED_LINK", value: updatedFiles}),
         onFileHashAddedEvents: (events) => dispatch({type: "LOADED_ADDED_EVENTS", value: events}),
-        onFileEditedEvents: (events) => dispatch({type: "LOADED_EDITED_EVENTS", value: events})
+        onFileEditedEvents: (events) => dispatch({type: "LOADED_EDITED_EVENTS", value: events}),
+        onHashSearchChange: (newHash) => dispatch({type: "HASH_SEARCH_CHANGE", value: newHash})
     }
 };
 

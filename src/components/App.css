@@ -201,3 +201,29 @@ html {
 .small-icon {
     font-size: 20px;
 }
+
+.hash-search-input {
+    width: 500px !important;
+    height: 30px !important;
+}
+
+.hash-search-button {
+    margin-right: 100px !important;
+}
+
+.red-border {
+    border: 2px solid red !important;
+}
+
+.blue-color {
+    color: #007bff;
+}
+
+.copy-button {
+    margin-left: 20px;
+    border: 1px solid gray;
+}
+
+.center-middle {
+    vertical-align: middle;
+}
