@@ -35,12 +35,15 @@ class App extends Component {
         if (this.state.metamaskStatus === "connected") {
             await this.loadBlockchainData();
             window.ethereum.on('accountsChanged', async () => {
+                window.location.assign("#/");
                 window.location.reload();
             });
             window.ethereum.on('chainChanged', async () => {
+                window.location.assign("#/");
                 window.location.reload();
             });
             window.ethereum.on('networkChanged', async () => {
+                window.location.assign("#/");
                 window.location.reload();
             });
         }

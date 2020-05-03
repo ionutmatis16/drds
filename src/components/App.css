@@ -185,6 +185,8 @@ html {
 .version-select {
     margin-left: 5px;
     width: 70%;
+    height: 30px!important;
+    padding: 0 10px !important;
 }
 
 .file-versions-div {
