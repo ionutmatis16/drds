@@ -11,7 +11,7 @@ import MyNavbar from "./dumb/MyNavbar";
 import MetamaskNotInstalled from "./dumb/MetamaskNotInstalled";
 import ConnectToMetamask from "./dumb/ConnectToMetamask";
 
-import Homepage from "./smart/SmartHomepage";
+import SmartHomepage from "./smart/SmartHomepage";
 import SmartFileInformationPage from "./smart/SmartFileInformationPage";
 import SmartFileLinkPage from "./smart/SmartFileLinkPage";
 import {getValidatedFile} from "./util/IPFSUtil";
@@ -212,7 +212,7 @@ class App extends Component {
                 if (this.state.loadedFiles === true) {
                     componentToRender = <HashRouter>
                         <Switch>
-                            <Route exact component={Homepage} path="/"/>
+                            <Route exact component={SmartHomepage} path="/"/>
                             <Route exact component={SmartFileInformationPage} path="/uploaded-files/:fileHash"/>
                             <Route exact component={SmartFileLinkPage}
                                    path="/uploaded-files/:fileHash/file-link/:linkHash"/>
