@@ -34,7 +34,8 @@ contract DRDS {
 
         FileInfo memory _firstFileInfo = firstVersionOfFile[_oldFileHash];
         string memory latestVersionFileInfoHash = latestVersionOfFile[_firstFileInfo.fileHash].fileHash;
-        require(keccak256(bytes(latestVersionFileInfoHash)) == keccak256(bytes(_oldFileHash)), "You can edit only the last version of your file!");
+        require(keccak256(bytes(latestVersionFileInfoHash)) == keccak256(bytes(_oldFileHash)),
+            "You can edit only the last version of your file!");
 
         latestVersionOfFile[_firstFileInfo.fileHash] = FileInfo(_newFileName, _newFileHash);
         firstVersionOfFile[_newFileHash] = FileInfo(_firstFileInfo.fileName, _firstFileInfo.fileHash);

@@ -212,8 +212,10 @@ class App extends Component {
                 if (this.state.loadedFiles === true) {
                     componentToRender = <HashRouter>
                         <Switch>
-                            <Route exact component={SmartHomepage} path="/"/>
-                            <Route exact component={SmartFileInformationPage} path="/uploaded-files/:fileHash"/>
+                            <Route exact component={SmartHomepage}
+                                   path="/"/>
+                            <Route exact component={SmartFileInformationPage}
+                                   path="/uploaded-files/:fileHash"/>
                             <Route exact component={SmartFileLinkPage}
                                    path="/uploaded-files/:fileHash/file-link/:linkHash"/>
                             <Route exact component={SmartFileVersion}
